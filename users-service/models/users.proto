@@ -1,0 +1,35 @@
+syntax = "proto3";
+package models;
+
+import  "google/protobuf/empty.proto";
+
+option go_package = "github.com/BinaryArchaism/users-service/models/employee";
+
+service UsersService {
+  rpc AddUser(UserToAdd) returns (google.protobuf.Empty) {}
+  rpc DeleteUser(UserId) returns (google.protobuf.Empty) {}
+  rpc GetUsers(google.protobuf.Empty) returns (Users) {}
+}
+
+message Users {
+  repeated FullUser users = 1;
+}
+
+message FullUser {
+  uint64 Id = 1;
+  string FirstName = 2;
+  string LastName = 3;
+  optional int32 Age = 4;
+  string Email = 5;
+}
+
+message UserId {
+  uint64 Id = 1;
+}
+
+message UserToAdd {
+  string FirstName = 1;
+  string LastName = 2;
+  optional int32 Age = 3;
+  string Email = 4;
+}
