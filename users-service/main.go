@@ -1,8 +1,8 @@
 package main
 
 import (
-	"context"
-	"fmt"
+	"github.com/BinaryArchaism/users-service/users-service/cache"
+	"github.com/BinaryArchaism/users-service/users-service/kafka"
 	"github.com/BinaryArchaism/users-service/users-service/models"
 	"github.com/BinaryArchaism/users-service/users-service/repository"
 	"github.com/BinaryArchaism/users-service/users-service/service"
@@ -17,33 +17,25 @@ func main() {
 	if err != nil {
 		logrus.Fatal("Error loading .env file")
 	}
-
 	db, err := repository.EstablishPSQLConnection()
 	defer repository.CloseConn(db)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	rd, err := cache.InitRedis()
+	defer cache.CloseRedis(rd)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
 	repo := repository.NewRepository(db)
 
-	s := grpc.NewServer()
-	srv := service.NewUsersService(repo)
+	ch := cache.NewCache(rd, repo)
 
-	srv.AddUser(context.Background(), &models.UserToAdd{
-		FirstName: "asdf",
-		LastName:  "fasd",
-		Age:       nil,
-		Email:     "fasdf",
-	})
-	srv.AddUser(context.Background(), &models.UserToAdd{
-		FirstName: "qwer",
-		LastName:  "qwer",
-		Age:       nil,
-		Email:     "qwer",
-	})
-	fmt.Println(srv.GetUsers(context.Background(), nil))
-	srv.DeleteUser(context.Background(), &models.UserId{Id: 1})
-	fmt.Println(srv.GetUsers(context.Background(), nil))
+	report := kafka.NewReports()
+
+	s := grpc.NewServer()
+	srv := service.NewUsersService(repo, ch, report)
 
 	models.RegisterUsersServiceServer(s, srv)
 

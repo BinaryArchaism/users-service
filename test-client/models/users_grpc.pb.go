@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UsersServiceClient interface {
-	AddUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	AddUser(ctx context.Context, in *UserToAdd, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	DeleteUser(ctx context.Context, in *UserId, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error)
 }
@@ -36,7 +36,7 @@ func NewUsersServiceClient(cc grpc.ClientConnInterface) UsersServiceClient {
 	return &usersServiceClient{cc}
 }
 
-func (c *usersServiceClient) AddUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *usersServiceClient) AddUser(ctx context.Context, in *UserToAdd, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/models.UsersService/AddUser", in, out, opts...)
 	if err != nil {
@@ -67,7 +67,7 @@ func (c *usersServiceClient) GetUsers(ctx context.Context, in *emptypb.Empty, op
 // All implementations must embed UnimplementedUsersServiceServer
 // for forward compatibility
 type UsersServiceServer interface {
-	AddUser(context.Context, *User) (*emptypb.Empty, error)
+	AddUser(context.Context, *UserToAdd) (*emptypb.Empty, error)
 	DeleteUser(context.Context, *UserId) (*emptypb.Empty, error)
 	GetUsers(context.Context, *emptypb.Empty) (*Users, error)
 	mustEmbedUnimplementedUsersServiceServer()
@@ -77,7 +77,7 @@ type UsersServiceServer interface {
 type UnimplementedUsersServiceServer struct {
 }
 
-func (UnimplementedUsersServiceServer) AddUser(context.Context, *User) (*emptypb.Empty, error) {
+func (UnimplementedUsersServiceServer) AddUser(context.Context, *UserToAdd) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddUser not implemented")
 }
 func (UnimplementedUsersServiceServer) DeleteUser(context.Context, *UserId) (*emptypb.Empty, error) {
@@ -100,7 +100,7 @@ func RegisterUsersServiceServer(s grpc.ServiceRegistrar, srv UsersServiceServer)
 }
 
 func _UsersService_AddUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(User)
+	in := new(UserToAdd)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func _UsersService_AddUser_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/models.UsersService/AddUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UsersServiceServer).AddUser(ctx, req.(*User))
+		return srv.(UsersServiceServer).AddUser(ctx, req.(*UserToAdd))
 	}
 	return interceptor(ctx, in, info, handler)
 }

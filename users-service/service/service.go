@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"github.com/BinaryArchaism/users-service/users-service/cache"
+	"github.com/BinaryArchaism/users-service/users-service/kafka"
 	"github.com/BinaryArchaism/users-service/users-service/models"
 	"github.com/BinaryArchaism/users-service/users-service/repository"
 	"github.com/sirupsen/logrus"
@@ -10,7 +12,9 @@ import (
 
 type usersService struct {
 	models.UnimplementedUsersServiceServer
-	repo repository.IRepository
+	repo   repository.IRepository
+	ch     cache.ICache
+	report kafka.IReports
 }
 
 func (u *usersService) AddUser(ctx context.Context, user *models.UserToAdd) (*emptypb.Empty, error) {
@@ -18,7 +22,10 @@ func (u *usersService) AddUser(ctx context.Context, user *models.UserToAdd) (*em
 	if err != nil {
 		logrus.Debug(err)
 	}
-	//TODO clickhouse send user with id
+	//err = u.report.AddUser(id, user)
+	//if err != nil {
+	//	return nil, err
+	//}
 	return nil, err
 }
 
@@ -27,9 +34,9 @@ func (u *usersService) DeleteUser(ctx context.Context, id *models.UserId) (*empt
 }
 
 func (u usersService) GetUsers(ctx context.Context, _ *emptypb.Empty) (*models.Users, error) {
-	return u.repo.GetUsers(ctx)
+	return u.ch.GetUsers(ctx)
 }
 
-func NewUsersService(repo repository.IRepository) *usersService {
-	return &usersService{repo: repo}
+func NewUsersService(repo repository.IRepository, ch cache.ICache, report kafka.IReports) *usersService {
+	return &usersService{repo: repo, ch: ch, report: report}
 }

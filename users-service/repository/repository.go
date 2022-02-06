@@ -8,7 +8,7 @@ import (
 )
 
 type IRepository interface {
-	AddUser(ctx context.Context, user *models.UserToAdd) (int, error)
+	AddUser(ctx context.Context, user *models.UserToAdd) (uint64, error)
 	DeleteUser(ctx context.Context, id *models.UserId) error
 	GetUsers(ctx context.Context) (*models.Users, error)
 }
@@ -17,9 +17,9 @@ type repository struct {
 	db *pgx.Conn
 }
 
-func (r *repository) AddUser(ctx context.Context, user *models.UserToAdd) (int, error) {
-	var id int
-	if err := r.db.QueryRow(ctx, "INSERT INTO users (first_name, last_name, email, age) values ($1, $2, $3, $4) RETURNING id",
+func (r *repository) AddUser(ctx context.Context, user *models.UserToAdd) (uint64, error) {
+	var id uint64
+	if err := r.db.QueryRow(ctx, "insert into users (first_name, last_name, email, age) values ($1, $2, $3, $4) returning id",
 		user.FirstName, user.LastName, user.Email, user.Age).Scan(&id); err != nil {
 		logrus.Debug(err)
 		return id, err
@@ -28,8 +28,7 @@ func (r *repository) AddUser(ctx context.Context, user *models.UserToAdd) (int, 
 }
 
 func (r *repository) DeleteUser(ctx context.Context, id *models.UserId) error {
-	if err := r.db.QueryRow(ctx, "delete from users where id=$1",
-		id).Scan(&id); err != nil {
+	if _, err := r.db.Exec(ctx, "delete from users where id=$1", id.Id); err != nil {
 		logrus.Debug(err)
 		return err
 	}
@@ -43,8 +42,8 @@ func (r repository) GetUsers(ctx context.Context) (*models.Users, error) {
 		logrus.Debug(err)
 		return nil, err
 	}
-	var curUser models.FullUser
 	for rows.Next() {
+		var curUser models.FullUser
 		err := rows.Scan(&curUser.Id, &curUser.FirstName, &curUser.LastName, &curUser.Email, &curUser.Age)
 		if err != nil {
 			logrus.Debug(err)
@@ -52,7 +51,6 @@ func (r repository) GetUsers(ctx context.Context) (*models.Users, error) {
 		}
 		users.Users = append(users.Users, &curUser)
 	}
-
 	return &users, nil
 }
 

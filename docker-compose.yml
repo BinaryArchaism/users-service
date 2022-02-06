@@ -1,12 +1,5 @@
 version: '3.5'
 
-networks:
-  postgres:
-    driver: bridge
-
-volumes:
-  postgres:
-
 services:
   postgres:
     container_name: postgres_db
@@ -17,9 +10,50 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - postgres:/data/postgres
+      - ./volumes/postgres:/data/postgres
     ports:
       - "5432:5432"
-    networks:
-      - postgres
 
+  redis:
+    image: redis:6.2-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --requirepass ${REDIS_PASS} --loglevel warning
+
+  kafka:
+    image: wurstmeister/kafka
+    volumes:
+      - ./volumes/shared/ch-data/kafka:/data
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: 192.168.0.43
+    links:
+      - zookeeper
+    ports:
+      - 9092:9092
+      - 9094:9094
+
+  zookeeper:
+    image: zookeeper
+    volumes:
+      - ./volumes/shared/ch-data/zookeeper:/data
+    ports:
+      - 2181:2181
+
+  clickhouse-server:
+    image: yandex/clickhouse-server
+    ports:
+      - "8123:8123"
+    volumes:
+      - ./volumes/cl_db:/var/lib/clickhouse
+    depends_on:
+      - kafka
+    links:
+      - kafka
+
+  clickhouse-client:
+    image: yandex/clickhouse-client
+    depends_on:
+      - clickhouse-server
+    ports:
+      - "9000:9000"
