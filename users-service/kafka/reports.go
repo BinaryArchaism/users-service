@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	"github.com/BinaryArchaism/users-service/users-service/models"
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/protobuf/proto"
@@ -13,7 +12,7 @@ type IReports interface {
 }
 
 type reports struct {
-	kfka *kafka.Writer
+	kfka *kafka.Conn
 }
 
 func (r *reports) AddUser(id uint64, user *models.UserToAdd) error {
@@ -21,18 +20,17 @@ func (r *reports) AddUser(id uint64, user *models.UserToAdd) error {
 	if err != nil {
 		return err
 	}
-	err = r.kfka.WriteMessages(context.Background(),
-		kafka.Message{
-			Key:   []byte(string(id)),
-			Value: strUser,
-		},
-	)
+	_, err = r.kfka.WriteMessages(kafka.Message{
+		Partition: 0,
+		Key:       []byte(string(id)),
+		Value:     strUser,
+	})
 	if err != nil {
-		log.Fatal("failed to write messages:", err)
+		return err
 	}
 
-	if err := r.kfka.Close(); err != nil {
-		log.Fatal("failed to close writer:", err)
+	if err != nil {
+		log.Fatal("failed to write messages:", err)
 	}
 	return nil
 }

@@ -18,19 +18,19 @@ type usersService struct {
 }
 
 func (u *usersService) AddUser(ctx context.Context, user *models.UserToAdd) (*emptypb.Empty, error) {
-	_, err := u.repo.AddUser(ctx, user)
+	id, err := u.repo.AddUser(ctx, user)
 	if err != nil {
 		logrus.Debug(err)
 	}
-	//err = u.report.AddUser(id, user)
-	//if err != nil {
-	//	return nil, err
-	//}
-	return nil, err
+	err = u.report.AddUser(id, user)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, err
 }
 
 func (u *usersService) DeleteUser(ctx context.Context, id *models.UserId) (*emptypb.Empty, error) {
-	return nil, u.repo.DeleteUser(ctx, id)
+	return &emptypb.Empty{}, u.repo.DeleteUser(ctx, id)
 }
 
 func (u usersService) GetUsers(ctx context.Context, _ *emptypb.Empty) (*models.Users, error) {

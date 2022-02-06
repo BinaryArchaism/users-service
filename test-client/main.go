@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/BinaryArchaism/users-service/test-client/models"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
 )
 
@@ -17,7 +18,9 @@ func main() {
 	client := models.NewUsersServiceClient(conn)
 	ctx := context.Background()
 
-	deletetest(client, ctx)
+	//getalltest(client, ctx)
+	//deletetest(client, ctx)
+	addtest(client, ctx)
 	getalltest(client, ctx)
 }
 
@@ -35,7 +38,7 @@ func addtest(client models.UsersServiceClient, ctx context.Context) {
 }
 
 func getalltest(client models.UsersServiceClient, ctx context.Context) {
-	feature, err := client.GetUsers(ctx, nil)
+	feature, err := client.GetUsers(ctx, &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("%v.getall(_) = _, %v: ", client, err)
 	}
@@ -43,9 +46,8 @@ func getalltest(client models.UsersServiceClient, ctx context.Context) {
 }
 
 func deletetest(client models.UsersServiceClient, ctx context.Context) {
-	feature, err := client.DeleteUser(ctx, &models.UserId{Id: uint64(1)})
+	_, err := client.DeleteUser(ctx, &models.UserId{Id: uint64(3)})
 	if err != nil {
 		log.Fatalf("%v.Delete(_) = _, %v: ", client, err)
 	}
-	log.Println(feature)
 }
